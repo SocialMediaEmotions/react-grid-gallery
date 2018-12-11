@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Lightbox from 'react-images';
 import Image from './Image';
+const uuidv4 = require('uuid/v4');
 
 class Gallery extends Component {
   constructor(props) {
@@ -25,7 +26,7 @@ class Gallery extends Component {
     this.onSelectImage = this.onSelectImage.bind(this);
     this.onDragEnd = this.onDragEnd.bind(this);
     this.reorder = this.reorder.bind(this);
-    this.provided = '';
+    this.uniqueId = uuidv4();
   }
 
   componentDidMount() {
@@ -219,8 +220,18 @@ class Gallery extends Component {
       return result;
     };
 
-    onDragEnd(destination, source) {
-      if (destination === undefined || source === undefined) {
+    onDragStart(evt, idx, key) {
+      if(!this.props.thumbsDraggable) {
+        evt.preventDefault();
+      } else {
+        evt.dataTransfer.setData("source", idx)
+        evt.dataTransfer.setData("uniqueIdentifier", key)
+        return evt;
+      }
+    }
+
+    onDragEnd(destination, source, draggedUniqueIdentifier, ownUniqueIdentifier) {
+      if (destination === undefined || source === undefined || (draggedUniqueIdentifier !== ownUniqueIdentifier)) {
         return;
       }
       let reorderedImages = this.reorder(
@@ -273,10 +284,9 @@ class Gallery extends Component {
            <div
             style={{display: 'inline-block'}}
             key={`Image-${item.src}`}
-            onDrop={(evt) =>  this.onDragEnd(idx, +evt.dataTransfer.getData("source"))}
+            onDrop={(evt) =>  this.onDragEnd(idx, evt.dataTransfer.getData("source"), evt.dataTransfer.getData("uniqueIdentifier"), this.uniqueId)}
             onDragOver={(evt) => evt.preventDefault()}
-            draggable={this.props.thumbsDraggable}
-            onDragStart={evt => evt.dataTransfer.setData("source", idx)}
+            onDragStart={evt => this.onDragStart(evt, idx, this.uniqueId)}
             >
             <Image
               item={item}
