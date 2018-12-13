@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Lightbox from 'react-images';
+import { v4 as uuidv4 } from 'uuid';
 import Image from './Image.js';
-const uuidv4 = require('uuid/v4');
 
 class Gallery extends Component {
     constructor (props) {
@@ -220,8 +220,8 @@ class Gallery extends Component {
                        * (item.thumbnailWidth / item.thumbnailHeight));
     }
 
-    onDragStart(evt, idx, key) {
-        if(!this.props.thumbsDraggable) {
+    onDragStart (evt, idx, key = this.uniqueId) {
+        if(!this.props.onSwap) {
           evt.preventDefault();
         } else {
           evt.dataTransfer.setData("source", idx)
@@ -230,13 +230,15 @@ class Gallery extends Component {
         }
     }
 
-    onDrop(evt, destination, ownUniqueIdentifier) {
+    onDrop (evt, destination, ownUniqueIdentifier = this.uniqueId) {
         let source = evt.dataTransfer.getData("source"),
             draggedUniqueIdentifier = evt.dataTransfer.getData("uniqueIdentifier");
         if (destination === undefined || source === undefined || (draggedUniqueIdentifier !== ownUniqueIdentifier)) {
           return;
         }
-        !this.props.onSwap || this.props.onSwap(source, destination);
+        if (this.props.onSwap) {
+          this.props.onSwap(source, destination);
+        }
     }
 
     renderThumbs (containerWidth, images = this.state.images) {
@@ -276,9 +278,9 @@ class Gallery extends Component {
             <div
               style={{display: 'inline-block'}}
               key={`Image-${item.src}`}
-              onDrop={(evt) =>  this.onDrop(evt, idx, this.uniqueId)}
+              onDrop={(evt) =>  this.onDrop(evt, idx)}
               onDragOver={(evt) => evt.preventDefault()}
-              onDragStart={evt => this.onDragStart(evt, idx, this.uniqueId)}
+              onDragStart={evt => this.onDragStart(evt, idx)}
             >
               <Image
                 item={item}
@@ -292,7 +294,7 @@ class Gallery extends Component {
                 thumbnailStyle={this.props.thumbnailStyle}
               />
             </div>
-            });
+        });
         var resizeIframeStyles = {
             height: 0,
             margin: 0,
@@ -392,7 +394,7 @@ Gallery.propTypes = {
     showLightboxThumbnails: PropTypes.bool,
     onClickLightboxThumbnail: PropTypes.func,
     tagStyle: PropTypes.object,
-    thumbsDraggable: PropTypes.bool.isRequired,
+    onSwap:PropTypes.func,
 };
 
 Gallery.defaultProps = {
@@ -411,7 +413,6 @@ Gallery.defaultProps = {
     showImageCount: true,
     lightboxWidth: 1024,
     showLightboxThumbnails: false,
-    thumbsDraggable: false,
 };
 
 module.exports = Gallery;
