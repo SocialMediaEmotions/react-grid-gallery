@@ -220,20 +220,20 @@ class Gallery extends Component {
                        * (item.thumbnailWidth / item.thumbnailHeight));
     }
 
-    onDragStart (evt, idx, key = this.uniqueId) {
+    onDragStart (evt, idx) {
         if(!this.props.onSwap) {
           evt.preventDefault();
         } else {
           evt.dataTransfer.setData("source", idx)
-          evt.dataTransfer.setData("uniqueIdentifier", key)
+          evt.dataTransfer.setData("uniqueIdentifier", this.uniqueId)
           return evt;
         }
     }
 
-    onDrop (evt, destination, ownUniqueIdentifier = this.uniqueId) {
+    onDrop (evt, destination) {
         let source = evt.dataTransfer.getData("source"),
             draggedUniqueIdentifier = evt.dataTransfer.getData("uniqueIdentifier");
-        if (destination === undefined || source === undefined || (draggedUniqueIdentifier !== ownUniqueIdentifier)) {
+        if (draggedUniqueIdentifier !== this.uniqueId) {
           return;
         }
         if (this.props.onSwap) {
