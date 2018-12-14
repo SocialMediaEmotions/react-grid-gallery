@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Lightbox from 'react-images';
+import { v4 as uuidv4 } from 'uuid';
 import Image from './Image.js';
 
 class Gallery extends Component {
@@ -23,6 +24,7 @@ class Gallery extends Component {
         this.onClickImage = this.onClickImage.bind(this);
         this.openLightbox = this.openLightbox.bind(this);
         this.onSelectImage = this.onSelectImage.bind(this);
+        this.uniqueId = uuidv4();
     }
 
     componentDidMount () {
@@ -218,6 +220,27 @@ class Gallery extends Component {
                        * (item.thumbnailWidth / item.thumbnailHeight));
     }
 
+    onDragStart (evt, idx) {
+        if(!this.props.onSwap) {
+          evt.preventDefault();
+        } else {
+          evt.dataTransfer.setData("source", idx)
+          evt.dataTransfer.setData("uniqueIdentifier", this.uniqueId)
+          return evt;
+        }
+    }
+
+    onDrop (evt, destination) {
+        let source = evt.dataTransfer.getData("source"),
+            draggedUniqueIdentifier = evt.dataTransfer.getData("uniqueIdentifier");
+        if (draggedUniqueIdentifier !== this.uniqueId) {
+          return;
+        }
+        if (this.props.onSwap) {
+          this.props.onSwap(source, destination);
+        }
+    }
+
     renderThumbs (containerWidth, images = this.state.images) {
         if (!images) return [];
         if (containerWidth == 0) return [];
@@ -251,19 +274,27 @@ class Gallery extends Component {
 
     render () {
         var images = this.state.thumbnails.map((item, idx) => {
-            return <Image
-            key={"Image-"+idx+"-"+item.src}
-            item={item}
-            index={idx}
-            margin={this.props.margin}
-            height={this.props.rowHeight}
-            isSelectable={this.props.enableImageSelection}
-            onClick={this.getOnClickThumbnailFn()}
-            onSelectImage={this.onSelectImage}
-            tagStyle={this.props.tagStyle}
-            tileViewportStyle={this.props.tileViewportStyle}
-            thumbnailStyle={this.props.thumbnailStyle}
-                />;});
+            return
+            <div
+              style={{display: 'inline-block'}}
+              key={`Image-${item.src}`}
+              onDrop={(evt) =>  this.onDrop(evt, idx)}
+              onDragOver={(evt) => evt.preventDefault()}
+              onDragStart={evt => this.onDragStart(evt, idx)}
+            >
+              <Image
+                item={item}
+                margin={this.props.margin}
+                height={this.props.rowHeight}
+                isSelectable={this.props.enableImageSelection}
+                onClick={this.getOnClickThumbnailFn()}
+                onSelectImage={this.onSelectImage}
+                tagStyle={this.props.tagStyle}
+                tileViewportStyle={this.props.tileViewportStyle}
+                thumbnailStyle={this.props.thumbnailStyle}
+              />
+            </div>
+        });
         var resizeIframeStyles = {
             height: 0,
             margin: 0,
@@ -362,7 +393,8 @@ Gallery.propTypes = {
     thumbnailStyle: PropTypes.func,
     showLightboxThumbnails: PropTypes.bool,
     onClickLightboxThumbnail: PropTypes.func,
-    tagStyle: PropTypes.object
+    tagStyle: PropTypes.object,
+    onSwap:PropTypes.func,
 };
 
 Gallery.defaultProps = {
@@ -380,7 +412,7 @@ Gallery.defaultProps = {
     showCloseButton: true,
     showImageCount: true,
     lightboxWidth: 1024,
-    showLightboxThumbnails: false
+    showLightboxThumbnails: false,
 };
 
 module.exports = Gallery;
