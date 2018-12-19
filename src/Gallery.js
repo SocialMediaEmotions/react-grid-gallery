@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Lightbox from 'react-images';
-import { v4 as uuidv4 } from 'uuid';
+import uuidv4 from 'uuid/v4';
 import Image from './Image.js';
 
 class Gallery extends Component {
